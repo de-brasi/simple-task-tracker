@@ -1,0 +1,12 @@
+services:
+  nestjs:
+    build:
+      context: docker/backend
+      dockerfile: Dockerfile
+    container_name: nestjs
+    volumes:
+      - "./backend/:/var/www/html"
+    ports:
+      - "3000:3000"
+#    tty: true
+#    command: /bin/sh
