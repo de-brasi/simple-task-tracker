@@ -15,6 +15,7 @@ import {InvalidProgressValueException} from "../exceptions/invalid-progress-valu
 import {TaskProgressReportDto} from "../dto/requests/task-progress-report.dto";
 import {TaskStatus} from "./task-status.enum";
 import {FilterTasksDto} from "../dto/requests/filter-tasks.dto";
+import {SortTasksDto} from "../dto/requests/sort-tasks.dto";
 
 @Injectable()
 export class TasksService {
@@ -190,7 +191,36 @@ export class TasksService {
         return new TasksListDto(taskDtos);
     }
 
-    private async getOneUserByIdOrThrow(id: number): User {
+    async getSortedTasks(adminLogin: string, sortTaskDto: SortTasksDto): Promise<TasksListDto> {
+        const admin = await this.getOneUserByLoginOrThrow(adminLogin);
+        console.log(sortTaskDto);
+
+        const {field, order} = sortTaskDto;
+
+        console.log(field, order);
+
+        const filteredOwnedTasks = await this.taskRepository.find({
+            where: {owner: admin},
+            order: {[field]: order}
+        });
+
+        const taskDtos = filteredOwnedTasks.map(task => {
+            return new TaskDto(
+                task.title,
+                task.description,
+                task.type,
+                task.executor.id,
+                task.deadline,
+                task.creationDate,
+                task.status,
+                task.progress,
+            );
+        });
+
+        return new TasksListDto(taskDtos);
+    }
+
+    private async getOneUserByIdOrThrow(id: number): Promise<User> {
         const searched = await this.userRepository.findOne({
             where: { id: id },
         });
@@ -214,7 +244,7 @@ export class TasksService {
         return searched;
     }
 
-    private async getOneTaskByConditionOrThrow(condition: Record<string, any>) {
+    private async getOneTaskByConditionOrThrow(condition: Record<string, any>): Promise<Task> {
         let searched = await this.taskRepository.findOne({
             where: condition,
         });

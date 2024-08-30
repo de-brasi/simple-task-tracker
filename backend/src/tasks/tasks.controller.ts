@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import {TasksService} from "./tasks.service";
 import {CreateTaskDto} from "../dto/requests/create-task.dto";
-import {ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger";
+import {ApiHeader, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger";
 import {TasksListDto} from "../dto/responses/tasks-list.dto";
 import {UpdateTaskDto} from "../dto/requests/update-task.dto";
 import {UpdateTaskStatusDto} from "../dto/requests/update-task-status.dto";
@@ -23,6 +23,7 @@ import {Role} from "../auth/role.enum";
 import {RolesGuard} from "../auth/roles.guard";
 import {TaskProgressReportDto} from "../dto/requests/task-progress-report.dto";
 import {FilterTasksDto} from "../dto/requests/filter-tasks.dto";
+import {SortTasksDto} from "../dto/requests/sort-tasks.dto";
 
 @Controller('api/tasks')
 @ApiTags('Задачи')
@@ -121,6 +122,7 @@ export class TasksController {
     @Roles(Role.Admin)
     @Get('/filtered')
     @ApiOperation({'summary': 'Получить задачи по условию'})
+    @ApiResponse({status: 200, type: TasksListDto})
     @ApiHeader({
         name: 'Authorization',
         description: 'JWT access token',
@@ -135,24 +137,14 @@ export class TasksController {
     @Roles(Role.Admin)
     @Get('/sorted')
     @ApiOperation({'summary': 'Получить задачи в отсортированном виде'})
+    @ApiResponse({status: 200, type: TasksListDto})
     @ApiHeader({
         name: 'Authorization',
         description: 'JWT access token',
         required: true
     })
-    async getSortedTasks(@Request() req) {
-        // todo: разделять что позволено пользователю, а что - админу
-        // todo:
-        // if (req.user.role == Role.User) {
-        //     // todo: это работает
-        //     throw new TaskNotExistsException(1);
-        // } else if (req.user.role == Role.Admin) {
-        //     // todo: это работает
-        //     throw new TaskNotExistsException(2);
-        // }
-
-        // TODO
+    async getSortedTasks(@Request() req, @Body() sortTaskDto: SortTasksDto) {
         const requestedUserLogin = req.user.username;
-        return await this.tasksService.getAllTasksOwnedByAdmin(requestedUserLogin);
+        return await this.tasksService.getSortedTasks(requestedUserLogin, sortTaskDto);
     }
 }
