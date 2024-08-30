@@ -8,6 +8,7 @@ import {LoginUserDto} from "../dto/requests/login-user.dto";
 import {LoginResponseDto} from "../dto/responses/login-response.dto";
 import {UserNotExistsException} from "../exceptions/user-not-exists.exception";
 import {JwtService} from "@nestjs/jwt";
+import {InvalidCredentials} from "../exceptions/invalid-credentials.exception";
 
 @Injectable()
 export class AuthService {
@@ -38,14 +39,12 @@ export class AuthService {
     }
 
     async signIn(loginUserDto: LoginUserDto): Promise<LoginResponseDto> {
-        const login = loginUserDto.login
-
         const entity = await this.usersRepository.findOne({
-            where: {login: login},
+            where: {login: loginUserDto.login, password: loginUserDto.password},
         });
 
         if (entity == null) {
-            throw new UserNotExistsException(login);
+            throw new InvalidCredentials();
         }
 
         const payload = {sub: entity.id, username: entity.login, role: entity.role};
