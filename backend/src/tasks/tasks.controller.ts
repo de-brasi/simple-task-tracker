@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import {TasksService} from "./tasks.service";
 import {CreateTaskDto} from "../dto/requests/create-task.dto";
-import {ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger";
+import {ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger";
 import {TasksListDto} from "../dto/responses/tasks-list.dto";
 import {UpdateTaskDto} from "../dto/requests/update-task.dto";
 import {UpdateTaskStatusDto} from "../dto/requests/update-task-status.dto";
@@ -22,6 +22,7 @@ import {Roles} from "../auth/roles.decorator";
 import {Role} from "../auth/role.enum";
 import {RolesGuard} from "../auth/roles.guard";
 import {TaskProgressReportDto} from "../dto/requests/task-progress-report.dto";
+import {FilterTasksDto} from "../dto/requests/filter-tasks.dto";
 
 @Controller('api/tasks')
 @ApiTags('Задачи')
@@ -32,6 +33,11 @@ export class TasksController {
     @Get()
     @ApiOperation({'summary': 'Получить все назначенные задачи (если запрашивающий - исполнитель) или все задачи (если админ)'})
     @ApiResponse({status: 200, type: TasksListDto})
+    @ApiHeader({
+        name: 'Authorization',
+        description: 'JWT access token',
+        required: true
+    })
     async getAllTasks(@Request() req) {
         const requestedUserLogin = req.user.username;
 
@@ -48,6 +54,11 @@ export class TasksController {
     @Post()
     @Roles(Role.Admin)
     @ApiOperation({'summary': 'Только для роли admin. Создать новую задачу'})
+    @ApiHeader({
+        name: 'Authorization',
+        description: 'JWT access token',
+        required: true
+    })
     async createNewTask(@Body() createTaskDto: CreateTaskDto, @Request() req) {
         const ownerLogin = req.user.username;
         await this.tasksService.createTask(createTaskDto, ownerLogin);
@@ -57,6 +68,11 @@ export class TasksController {
     @Put('/:id')
     @Roles(Role.Admin)
     @ApiOperation({'summary': 'Только для роли admin. Изменить задачу'})
+    @ApiHeader({
+        name: 'Authorization',
+        description: 'JWT access token',
+        required: true
+    })
     async updateTask(@Param('id') id: number, @Body() updateTaskDto: UpdateTaskDto) {
         await this.tasksService.updateTask(id, updateTaskDto);
     }
@@ -65,6 +81,11 @@ export class TasksController {
     @Delete('/:id')
     @Roles(Role.Admin)
     @ApiOperation({'summary': 'Только для роли admin. Удалить задачу'})
+    @ApiHeader({
+        name: 'Authorization',
+        description: 'JWT access token',
+        required: true
+    })
     async deleteTask(@Param('id') id: number) {
         await this.tasksService.deleteTask(id);
     }
@@ -73,6 +94,11 @@ export class TasksController {
     @Put('/:id/status')
     @Roles(Role.Admin)
     @ApiOperation({'summary': 'Только для роли admin. Установить статус и прогресс выполнения задачи'})
+    @ApiHeader({
+        name: 'Authorization',
+        description: 'JWT access token',
+        required: true
+    })
     async setTaskStatus(@Param('id') id: number, @Body() updateTaskStatusDto: UpdateTaskStatusDto, @Request() req) {
         await this.tasksService.setTaskStatus(id, updateTaskStatusDto);
     }
@@ -81,41 +107,39 @@ export class TasksController {
     @Put('/:id/progress-report')
     @Roles(Role.User)
     @ApiOperation({'summary': 'Только для роли user. Установить прогресс выполнения задачи. Новое значение прогресса должно быть строго больше предыдущего.'})
+    @ApiHeader({
+        name: 'Authorization',
+        description: 'JWT access token',
+        required: true
+    })
     async reportTaskProgress(@Param('id') id: number, @Body() updateTaskProgressDto: TaskProgressReportDto, @Request() req) {
         const executorLogin = req.user.username;
         await this.tasksService.setTaskProgressAscendingOnly(id, updateTaskProgressDto, executorLogin);
     }
 
     @UseGuards(AuthGuard)
+    @Roles(Role.Admin)
     @Get('/filtered')
     @ApiOperation({'summary': 'Получить задачи по условию'})
-    async getFilteredTasks(@Request() req) {
-        // todo: разделять что позволено пользователю, а что - админу
-        // todo:
-        // if (req.user.role == Role.User) {
-        //     // todo: это работает
-        //     throw new TaskNotExistsException(1);
-        // } else if (req.user.role == Role.Admin) {
-        //     // todo: это работает
-        //     throw new TaskNotExistsException(2);
-        // }
-
-        // TODO
+    @ApiHeader({
+        name: 'Authorization',
+        description: 'JWT access token',
+        required: true
+    })
+    async getFilteredTasks(@Request() req, @Body() filterTasksDto: FilterTasksDto) {
         const requestedUserLogin = req.user.username;
-
-        if (req.user.role == Role.User) {
-            return await this.tasksService.getAllTasksAssignedToUser(requestedUserLogin);
-        } else if (req.user.role == Role.Admin) {
-            return await this.tasksService.getAllTasksOwnedByAdmin(requestedUserLogin);
-        }
-
-        throw new HttpException(`Not expected role ${req.user.role}`, HttpStatus.NOT_FOUND);
+        return await this.tasksService.getFilteredTasks(requestedUserLogin, filterTasksDto);
     }
 
     @UseGuards(AuthGuard)
-    @Get('/filtered')
-    @ApiOperation({'summary': 'Получить задачи в отсортированном виде'})
+    @Roles(Role.Admin)
     @Get('/sorted')
+    @ApiOperation({'summary': 'Получить задачи в отсортированном виде'})
+    @ApiHeader({
+        name: 'Authorization',
+        description: 'JWT access token',
+        required: true
+    })
     async getSortedTasks(@Request() req) {
         // todo: разделять что позволено пользователю, а что - админу
         // todo:
@@ -129,13 +153,6 @@ export class TasksController {
 
         // TODO
         const requestedUserLogin = req.user.username;
-
-        if (req.user.role == Role.User) {
-            return await this.tasksService.getAllTasksAssignedToUser(requestedUserLogin);
-        } else if (req.user.role == Role.Admin) {
-            return await this.tasksService.getAllTasksOwnedByAdmin(requestedUserLogin);
-        }
-
-        throw new HttpException(`Not expected role ${req.user.role}`, HttpStatus.NOT_FOUND);
+        return await this.tasksService.getAllTasksOwnedByAdmin(requestedUserLogin);
     }
 }

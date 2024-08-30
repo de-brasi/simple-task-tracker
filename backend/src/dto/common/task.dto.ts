@@ -2,7 +2,7 @@ export class TaskDto {
     readonly title: string;
     readonly description: string;
     readonly type: string;
-    readonly executor: number;
+    readonly executorId: number;
     readonly deadline: Date;
     readonly creationDate: Date;
     readonly status: string;
@@ -12,7 +12,7 @@ export class TaskDto {
         title: string,
         description: string,
         type: string,
-        executor: number,
+        executorId: number,
         deadline: Date,
         creationDate: Date,
         status: string,
@@ -21,7 +21,7 @@ export class TaskDto {
         this.title = title;
         this.description = description;
         this.type = type;
-        this.executor = executor;
+        this.executorId = executorId;
         this.deadline = deadline;
         this.creationDate = creationDate;
         this.status = status;

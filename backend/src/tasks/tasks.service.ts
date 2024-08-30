@@ -14,6 +14,7 @@ import {UserIdNotExistsException} from "../exceptions/user-id-not-exists.excepti
 import {InvalidProgressValueException} from "../exceptions/invalid-progress-value.exception";
 import {TaskProgressReportDto} from "../dto/requests/task-progress-report.dto";
 import {TaskStatus} from "./task-status.enum";
+import {FilterTasksDto} from "../dto/requests/filter-tasks.dto";
 
 @Injectable()
 export class TasksService {
@@ -26,14 +27,7 @@ export class TasksService {
     ) {}
 
     async getAllTasksOwnedByAdmin(adminLogin: string): Promise<TasksListDto> {
-        const admin = await this.userRepository.findOne({
-            where: {login: adminLogin},
-        });
-
-        if (admin == null) {
-            throw new UserNotExistsException(adminLogin);
-        }
-
+        const admin = await this.getOneUserByLoginOrThrow(adminLogin);
         const ownedTasks = await this.taskRepository.find({
             where: {owner: admin}
         });
@@ -55,14 +49,7 @@ export class TasksService {
     }
 
     async getAllTasksAssignedToUser(userLogin: string): Promise<TasksListDto> {
-        const user = await this.userRepository.findOne({
-            where: {login: userLogin},
-        });
-
-        if (user == null) {
-            throw new UserNotExistsException(userLogin);
-        }
-
+        const user = await this.getOneUserByLoginOrThrow(userLogin);
         const assignedTasks = await this.taskRepository.find({
             where: {executor: user}
         });
@@ -87,19 +74,8 @@ export class TasksService {
         const { executorId, ...taskData } = createTaskDto;
 
         let entity = await this.taskRepository.create(taskData);
-        const executor = await this.userRepository.findOne({
-            where: { id: executorId },
-        });
-        const owner = await this.userRepository.findOne({
-            where: { login: ownerLogin },
-        });
-
-        if (executor == null) {
-            throw new UserIdNotExistsException(executorId);
-        }
-        if (owner == null) {
-            throw new UserNotExistsException(ownerLogin);
-        }
+        const executor = await this.getOneUserByIdOrThrow(executorId);
+        const owner = await this.getOneUserByLoginOrThrow(ownerLogin);
 
         entity.status = TaskStatus.Started;
         entity.executor = executor;
@@ -111,13 +87,7 @@ export class TasksService {
     }
 
     async updateTask(id: number, updateTaskDto: UpdateTaskDto) {
-        let entity = await this.taskRepository.findOne({
-            where: { id: id },
-        });
-
-        if (entity == null) {
-            throw new TaskNotExistsException(id);
-        }
+        let entity = await this.getOneTaskByConditionOrThrow({ id: id });
 
         if (updateTaskDto.title != undefined) {
             entity.title = updateTaskDto.title;
@@ -138,39 +108,19 @@ export class TasksService {
             entity.deadline = updateTaskDto.deadline;
         }
         if (updateTaskDto.executorId != undefined) {
-            const newExecutor = await this.userRepository.findOne({
-                where: { id: updateTaskDto.executorId }
-            });
-
-            if (newExecutor == null) {
-                throw new UserIdNotExistsException(updateTaskDto.executorId);
-            }
-
-            entity.executor = newExecutor;
+            entity.executor = await this.getOneUserByIdOrThrow(updateTaskDto.executorId);
         }
         await this.taskRepository.save(entity);
     }
 
     async deleteTask(id: number) {
-        let entity = await this.taskRepository.findOne({
-            where: { id: id },
-        });
-
-        if (entity == null) {
-            throw new TaskNotExistsException(id);
-        }
-
+        // todo: сохранять в архив вместо полного удаления
+        let entity = await this.getOneTaskByConditionOrThrow({ id: id });
         await this.taskRepository.remove(entity);
     }
 
     async setTaskStatus(taskId: number, updateTaskStatusDto: UpdateTaskStatusDto) {
-        let entity = await this.taskRepository.findOne({
-            where: { id: taskId },
-        });
-
-        if (entity == null) {
-            throw new TaskNotExistsException(taskId);
-        }
+        let entity = await this.getOneTaskByConditionOrThrow({ id: taskId });
 
         entity.status = updateTaskStatusDto.status;
         entity.progress = updateTaskStatusDto.progress;
@@ -179,21 +129,8 @@ export class TasksService {
     }
 
     async setTaskProgressAscendingOnly(taskId: number, updateTaskProgressDto: TaskProgressReportDto, login: string) {
-        const executor = await this.userRepository.findOne({
-            where: { login: login },
-        });
-
-        if (executor == null) {
-            throw new UserNotExistsException(login);
-        }
-
-        let targetTask = await this.taskRepository.findOne({
-            where: {id: taskId, executor: executor},
-        });
-
-        if (targetTask == null) {
-            throw new TaskNotExistsException(taskId);
-        }
+        const executor = await this.getOneUserByLoginOrThrow(login);
+        const targetTask = await this.getOneTaskByConditionOrThrow({id: taskId, executor: executor});
 
         // only increasing progress available
         if (targetTask.progress >= updateTaskProgressDto.progress) {
@@ -208,5 +145,84 @@ export class TasksService {
 
         targetTask.progress = updateTaskProgressDto.progress;
         await this.taskRepository.save(targetTask);
+    }
+
+    async getFilteredTasks(adminLogin: string, filterTasksDto: FilterTasksDto): Promise<TasksListDto> {
+        const admin = await this.getOneUserByLoginOrThrow(adminLogin);
+        const filterCondition: Record<string, any> = {owner: admin};
+
+        if (filterTasksDto.type != undefined) {
+            filterCondition.type = filterTasksDto.type;
+        }
+        if (filterTasksDto.status != undefined) {
+            filterCondition.status = filterTasksDto.status;
+        }
+        if (filterTasksDto.deadline != undefined) {
+            filterCondition.deadline = filterTasksDto.deadline;
+        }
+        if (filterTasksDto.creationDate != undefined) {
+            filterCondition.creationDate = filterTasksDto.creationDate;
+        }
+        if (filterTasksDto.executorId != undefined) {
+            console.log("executor is:", filterTasksDto.executorId);
+            filterCondition.executor = await this.getOneUserByIdOrThrow(filterTasksDto.executorId);
+        }
+
+        console.log(filterCondition);
+
+        const filteredOwnedTasks = await this.taskRepository.find({
+            where: filterCondition
+        });
+
+        const taskDtos = filteredOwnedTasks.map(task => {
+            return new TaskDto(
+                task.title,
+                task.description,
+                task.type,
+                task.executor.id,
+                task.deadline,
+                task.creationDate,
+                task.status,
+                task.progress,
+            );
+        });
+
+        return new TasksListDto(taskDtos);
+    }
+
+    private async getOneUserByIdOrThrow(id: number): User {
+        const searched = await this.userRepository.findOne({
+            where: { id: id },
+        });
+
+        if (searched == null) {
+            throw new UserIdNotExistsException(id);
+        }
+
+        return searched;
+    }
+
+    private async getOneUserByLoginOrThrow(login: string): Promise<User> {
+        const searched = await this.userRepository.findOne({
+            where: { login: login },
+        });
+
+        if (searched == null) {
+            throw new UserNotExistsException(login);
+        }
+
+        return searched;
+    }
+
+    private async getOneTaskByConditionOrThrow(condition: Record<string, any>) {
+        let searched = await this.taskRepository.findOne({
+            where: condition,
+        });
+
+        if (searched == null) {
+            throw new TaskNotExistsException(condition.id);
+        }
+
+        return searched;
     }
 }
