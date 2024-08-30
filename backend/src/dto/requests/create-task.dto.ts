@@ -1,6 +1,8 @@
-import {IsDate, IsNotEmpty, IsNumber, IsString} from "class-validator";
+import {IsDate, IsIn, IsNotEmpty, IsNumber, IsString} from "class-validator";
 import {Type} from "class-transformer";
 import {ApiProperty} from "@nestjs/swagger";
+import {TaskStatus} from "../../tasks/task-status.enum";
+import {TaskType} from "../../tasks/task-type.enum";
 
 export class CreateTaskDto {
     @IsString()
@@ -19,8 +21,9 @@ export class CreateTaskDto {
 
     @IsString()
     @IsNotEmpty()
+    @IsIn([TaskType.Epic, TaskType.Milestone])
     @ApiProperty({
-        default: "type of some important task description"
+        default: TaskType.Epic
     })
     public readonly type: string;
 

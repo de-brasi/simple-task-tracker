@@ -2,6 +2,7 @@ import {IsDate, IsIn, IsNumber, IsOptional, IsString} from "class-validator";
 import {ApiProperty} from "@nestjs/swagger";
 import {Type} from "class-transformer";
 import {TaskStatus} from "../../tasks/task-status.enum";
+import {TaskType} from "../../tasks/task-type.enum";
 
 export class UpdateTaskDto {
     @IsString()
@@ -24,10 +25,11 @@ export class UpdateTaskDto {
 
     @IsString()
     @IsOptional()
+    @IsIn([TaskType.Epic, TaskType.Milestone])
     @ApiProperty({
         required: false,
         nullable: true,
-        default: "New type"
+        default: TaskType.Epic
     })
     readonly type: string = null;
 
