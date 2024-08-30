@@ -1,4 +1,4 @@
-import {IsIn, IsNotEmpty, IsOptional, IsString} from "class-validator";
+import {IsIn, IsNotEmpty, IsString} from "class-validator";
 import {ApiProperty} from "@nestjs/swagger";
 import {SortAttribute} from "./sort-attribute.enum";
 

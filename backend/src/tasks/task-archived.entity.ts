@@ -2,7 +2,7 @@ import {Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn} from "typ
 import {User} from "../auth/user.entity";
 
 @Entity()
-export class Task {
+export class TaskArchived {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -28,6 +28,9 @@ export class Task {
 
     @Column({type: 'timestamp', default: () => 'CURRENT_TIMESTAMP'})
     creationDate: Date
+
+    @Column({type: 'timestamp', default: () => 'CURRENT_TIMESTAMP'})
+    deletionDate: Date
 
     @Column({type: 'varchar', length: 255})
     status: string;

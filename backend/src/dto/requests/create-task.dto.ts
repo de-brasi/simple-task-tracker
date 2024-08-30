@@ -1,7 +1,6 @@
 import {IsDate, IsIn, IsNotEmpty, IsNumber, IsString} from "class-validator";
 import {Type} from "class-transformer";
 import {ApiProperty} from "@nestjs/swagger";
-import {TaskStatus} from "../../tasks/task-status.enum";
 import {TaskType} from "../../tasks/task-type.enum";
 
 export class CreateTaskDto {

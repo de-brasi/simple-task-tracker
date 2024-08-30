@@ -16,12 +16,16 @@ import {TaskProgressReportDto} from "../dto/requests/task-progress-report.dto";
 import {TaskStatus} from "./task-status.enum";
 import {FilterTasksDto} from "../dto/requests/filter-tasks.dto";
 import {SortTasksDto} from "../dto/requests/sort-tasks.dto";
+import {TaskArchived} from "./task-archived.entity";
 
 @Injectable()
 export class TasksService {
     constructor(
         @InjectRepository(Task)
         private readonly taskRepository: Repository<Task>,
+
+        @InjectRepository(TaskArchived)
+        private readonly taskArchivedRepository: Repository<TaskArchived>,
 
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
@@ -115,9 +119,22 @@ export class TasksService {
     }
 
     async deleteTask(id: number) {
-        // todo: сохранять в архив вместо полного удаления
-        let entity = await this.getOneTaskByConditionOrThrow({ id: id });
-        await this.taskRepository.remove(entity);
+        let task = await this.getOneTaskByConditionOrThrow({ id: id });
+
+        // archive
+        const archivedTask = new TaskArchived();
+        archivedTask.owner = task.owner;
+        archivedTask.title = task.title;
+        archivedTask.description = task.description;
+        archivedTask.type = task.type;
+        archivedTask.executor = task.executor;
+        archivedTask.deadline = task.deadline;
+        archivedTask.creationDate = task.creationDate;
+        archivedTask.status = task.status;
+        archivedTask.progress = task.progress;
+
+        await this.taskArchivedRepository.save(archivedTask);
+        await this.taskRepository.remove(task);
     }
 
     async setTaskStatus(taskId: number, updateTaskStatusDto: UpdateTaskStatusDto) {

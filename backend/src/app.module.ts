@@ -4,6 +4,7 @@ import { AuthModule } from './auth/auth.module';
 import { TasksModule } from './tasks/tasks.module';
 import {User} from "./auth/user.entity";
 import {Task} from "./tasks/task.entity";
+import {TaskArchived} from "./tasks/task-archived.entity";
 
 @Module({
     imports: [
@@ -14,7 +15,7 @@ import {Task} from "./tasks/task.entity";
             username: 'postgres',
             password: 'postgres',
             database: 'task-tracker',
-            entities: [User, Task],
+            entities: [User, Task, TaskArchived],
             synchronize: true,
         }),
         TasksModule,

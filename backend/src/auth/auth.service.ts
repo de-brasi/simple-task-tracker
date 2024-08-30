@@ -6,7 +6,6 @@ import {RegisterUserDto} from "../dto/requests/register-user.dto";
 import {LoginTakenException} from "../exceptions/login-taken.exception";
 import {LoginUserDto} from "../dto/requests/login-user.dto";
 import {LoginResponseDto} from "../dto/responses/login-response.dto";
-import {UserNotExistsException} from "../exceptions/user-not-exists.exception";
 import {JwtService} from "@nestjs/jwt";
 import {InvalidCredentials} from "../exceptions/invalid-credentials.exception";
 
