@@ -25,7 +25,7 @@ export class UpdateTaskDto {
 
     @IsString()
     @IsOptional()
-    @IsIn([TaskType.Epic, TaskType.Milestone])
+    @IsIn([TaskType.Task, TaskType.Epic, TaskType.Milestone])
     @ApiProperty({
         required: false,
         nullable: true,

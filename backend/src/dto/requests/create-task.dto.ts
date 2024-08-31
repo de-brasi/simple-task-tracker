@@ -20,9 +20,9 @@ export class CreateTaskDto {
 
     @IsString()
     @IsNotEmpty()
-    @IsIn([TaskType.Epic, TaskType.Milestone])
+    @IsIn([TaskType.Task, TaskType.Epic, TaskType.Milestone])
     @ApiProperty({
-        default: TaskType.Epic
+        default: TaskType.Task
     })
     public readonly type: string;
 

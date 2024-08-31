@@ -1,4 +1,5 @@
 export class TaskDto {
+    readonly id: number;
     readonly title: string;
     readonly description: string;
     readonly type: string;
@@ -9,6 +10,7 @@ export class TaskDto {
     readonly progress: number;
 
     constructor(
+        id: number,
         title: string,
         description: string,
         type: string,
@@ -18,6 +20,7 @@ export class TaskDto {
         status: string,
         progress: number,
     ) {
+        this.id = id;
         this.title = title;
         this.description = description;
         this.type = type;

@@ -39,6 +39,7 @@ export class TasksService {
 
         const taskDtos = ownedTasks.map(task => {
             return new TaskDto(
+                task.id,
                 task.title,
                 task.description,
                 task.type,
@@ -61,6 +62,7 @@ export class TasksService {
 
         const taskDtos = assignedTasks.map(task => {
             return new TaskDto(
+                task.id,
                 task.title,
                 task.description,
                 task.type,
@@ -194,6 +196,7 @@ export class TasksService {
 
         const taskDtos = filteredOwnedTasks.map(task => {
             return new TaskDto(
+                task.id,
                 task.title,
                 task.description,
                 task.type,
@@ -223,6 +226,7 @@ export class TasksService {
 
         const taskDtos = filteredOwnedTasks.map(task => {
             return new TaskDto(
+                task.id,
                 task.title,
                 task.description,
                 task.type,
