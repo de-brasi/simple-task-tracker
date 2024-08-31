@@ -5,16 +5,17 @@ import { TasksModule } from './tasks/tasks.module';
 import {User} from "./auth/user.entity";
 import {Task} from "./tasks/task.entity";
 import {TaskArchived} from "./tasks/task-archived.entity";
+import * as process from "node:process";
 
 @Module({
     imports: [
         TypeOrmModule.forRoot({
             type: 'postgres',
-            host: 'postgres',
-            port: 5432,
-            username: 'postgres',
-            password: 'postgres',
-            database: 'task-tracker',
+            host: process.env.POSTGRES_HOST,
+            port: Number(process.env.POSTGRES_PORT),
+            username: process.env.POSTGRES_USERNAME,
+            password: process.env.POSTGRES_PASSWORD,
+            database: process.env.POSTGRES_DATABASE,
             entities: [User, Task, TaskArchived],
             synchronize: true,
         }),
