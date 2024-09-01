@@ -23,10 +23,11 @@ export class AuthService {
         const entity = this.usersRepository.create(userDto);
 
         try {
-            await this.usersRepository.save(entity);
+            const savedEntity = await this.usersRepository.save(entity);
             const payload = {sub: entity.id, username: entity.login, role: entity.role};
             return new LoginResponseDto(
-                await this.jwtService.signAsync(payload)
+                await this.jwtService.signAsync(payload),
+                savedEntity.id
             );
         } catch (error) {
             if (error instanceof QueryFailedError && (error as any).code === '23505') {
@@ -48,7 +49,8 @@ export class AuthService {
 
         const payload = {sub: entity.id, username: entity.login, role: entity.role};
         return new LoginResponseDto(
-            await this.jwtService.signAsync(payload)
+            await this.jwtService.signAsync(payload),
+            entity.id
         );
     }
 }
