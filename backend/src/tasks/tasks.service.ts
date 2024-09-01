@@ -17,6 +17,7 @@ import {TaskStatus} from "./task-status.enum";
 import {FilterTasksDto} from "../dto/requests/filter-tasks.dto";
 import {SortTasksDto} from "../dto/requests/sort-tasks.dto";
 import {TaskArchived} from "./task-archived.entity";
+import {PutTaskResponseDto} from "../dto/responses/put-task-response.dto";
 
 @Injectable()
 export class TasksService {
@@ -80,7 +81,7 @@ export class TasksService {
     async createTask(createTaskDto: CreateTaskDto, ownerLogin: string) {
         const { executorId, ...taskData } = createTaskDto;
 
-        let entity = await this.taskRepository.create(taskData);
+        const entity = await this.taskRepository.create(taskData);
         const executor = await this.getOneUserByIdOrThrow(executorId);
         const owner = await this.getOneUserByLoginOrThrow(ownerLogin);
 
@@ -89,8 +90,18 @@ export class TasksService {
         entity.owner = owner;
         entity.progress = 0;
 
-        await this.taskRepository.save(entity);
-        return entity;
+        const savedEntity = await this.taskRepository.save(entity);
+
+        return new PutTaskResponseDto(
+            savedEntity.id,
+            savedEntity.title,
+            savedEntity.description,
+            savedEntity.type,
+            savedEntity.executor.id,
+            savedEntity.deadline,
+            savedEntity.status,
+            savedEntity.progress
+        );
     }
 
     async updateTask(id: number, updateTaskDto: UpdateTaskDto) {
@@ -117,7 +128,19 @@ export class TasksService {
         if (updateTaskDto.executorId != undefined) {
             entity.executor = await this.getOneUserByIdOrThrow(updateTaskDto.executorId);
         }
-        await this.taskRepository.save(entity);
+
+        const savedEntity = await this.taskRepository.save(entity);
+
+        return new PutTaskResponseDto(
+            savedEntity.id,
+            savedEntity.title,
+            savedEntity.description,
+            savedEntity.type,
+            savedEntity.executor.id,
+            savedEntity.deadline,
+            savedEntity.status,
+            savedEntity.progress
+        );
     }
 
     async deleteTask(id: number) {

@@ -10,6 +10,7 @@ export class UpdateTaskDto {
     @ApiProperty({
         required: false,
         nullable: true,
+        description: "New title of task",
         default: "New title"
     })
     readonly title: string = null;
@@ -19,6 +20,7 @@ export class UpdateTaskDto {
     @ApiProperty({
         required: false,
         nullable: true,
+        description: "New description of task",
         default: "New description"
     })
     readonly description: string = null;
@@ -29,6 +31,7 @@ export class UpdateTaskDto {
     @ApiProperty({
         required: false,
         nullable: true,
+        description: "New task's type",
         default: TaskType.Epic
     })
     readonly type: string = null;
@@ -38,7 +41,7 @@ export class UpdateTaskDto {
     @ApiProperty({
         required: false,
         nullable: true,
-        default: "New executor id"
+        default: 0
     })
     readonly executorId: number = null;
 
@@ -48,7 +51,7 @@ export class UpdateTaskDto {
     @ApiProperty({
         required: false,
         nullable: true,
-        default: "2021-12-31T00:00:00.000Z"
+        default: "01-01-2001"
     })
     readonly deadline: Date = null;
 

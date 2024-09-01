@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import {TasksService} from "./tasks.service";
 import {CreateTaskDto} from "../dto/requests/create-task.dto";
-import {ApiHeader, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger";
+import {ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger";
 import {TasksListDto} from "../dto/responses/tasks-list.dto";
 import {UpdateTaskDto} from "../dto/requests/update-task.dto";
 import {UpdateTaskStatusDto} from "../dto/requests/update-task-status.dto";
@@ -24,6 +24,7 @@ import {RolesGuard} from "../auth/roles.guard";
 import {TaskProgressReportDto} from "../dto/requests/task-progress-report.dto";
 import {FilterTasksDto} from "../dto/requests/filter-tasks.dto";
 import {SortTasksDto} from "../dto/requests/sort-tasks.dto";
+import {PutTaskResponseDto} from "../dto/responses/put-task-response.dto";
 
 @Controller('api/tasks')
 @ApiTags('Задачи')
@@ -34,11 +35,7 @@ export class TasksController {
     @Get()
     @ApiOperation({'summary': 'Получить все назначенные задачи (если запрашивающий - исполнитель) или все задачи (если админ)'})
     @ApiResponse({status: 200, type: TasksListDto})
-    @ApiHeader({
-        name: 'Authorization',
-        description: 'JWT access token',
-        required: true
-    })
+    @ApiBearerAuth('access-token')
     async getAllTasks(@Request() req) {
         const requestedUserLogin = req.user.username;
 
@@ -55,11 +52,8 @@ export class TasksController {
     @Post()
     @Roles(Role.Admin)
     @ApiOperation({'summary': 'Только для роли admin. Создать новую задачу'})
-    @ApiHeader({
-        name: 'Authorization',
-        description: 'JWT access token',
-        required: true
-    })
+    @ApiResponse({status: 200, type: PutTaskResponseDto})
+    @ApiBearerAuth('access-token')
     async createNewTask(@Body() createTaskDto: CreateTaskDto, @Request() req) {
         const ownerLogin = req.user.username;
         await this.tasksService.createTask(createTaskDto, ownerLogin);
@@ -69,11 +63,8 @@ export class TasksController {
     @Put('/:id')
     @Roles(Role.Admin)
     @ApiOperation({'summary': 'Только для роли admin. Изменить задачу'})
-    @ApiHeader({
-        name: 'Authorization',
-        description: 'JWT access token',
-        required: true
-    })
+    @ApiResponse({status: 200, type: PutTaskResponseDto})
+    @ApiBearerAuth('access-token')
     async updateTask(@Param('id') id: number, @Body() updateTaskDto: UpdateTaskDto) {
         await this.tasksService.updateTask(id, updateTaskDto);
     }
@@ -82,11 +73,7 @@ export class TasksController {
     @Delete('/:id')
     @Roles(Role.Admin)
     @ApiOperation({'summary': 'Только для роли admin. Удалить задачу'})
-    @ApiHeader({
-        name: 'Authorization',
-        description: 'JWT access token',
-        required: true
-    })
+    @ApiBearerAuth('access-token')
     async deleteTask(@Param('id') id: number) {
         await this.tasksService.deleteTask(id);
     }
@@ -95,11 +82,7 @@ export class TasksController {
     @Put('/:id/status')
     @Roles(Role.Admin)
     @ApiOperation({'summary': 'Только для роли admin. Установить статус и прогресс выполнения задачи'})
-    @ApiHeader({
-        name: 'Authorization',
-        description: 'JWT access token',
-        required: true
-    })
+    @ApiBearerAuth('access-token')
     async setTaskStatus(@Param('id') id: number, @Body() updateTaskStatusDto: UpdateTaskStatusDto, @Request() req) {
         await this.tasksService.setTaskStatus(id, updateTaskStatusDto);
     }
@@ -108,11 +91,7 @@ export class TasksController {
     @Put('/:id/progress-report')
     @Roles(Role.User)
     @ApiOperation({'summary': 'Только для роли user. Установить прогресс выполнения задачи. Новое значение прогресса должно быть строго больше предыдущего.'})
-    @ApiHeader({
-        name: 'Authorization',
-        description: 'JWT access token',
-        required: true
-    })
+    @ApiBearerAuth('access-token')
     async reportTaskProgress(@Param('id') id: number, @Body() updateTaskProgressDto: TaskProgressReportDto, @Request() req) {
         const executorLogin = req.user.username;
         await this.tasksService.setTaskProgressAscendingOnly(id, updateTaskProgressDto, executorLogin);
@@ -123,11 +102,7 @@ export class TasksController {
     @Get('/filtered')
     @ApiOperation({'summary': 'Получить задачи по условию'})
     @ApiResponse({status: 200, type: TasksListDto})
-    @ApiHeader({
-        name: 'Authorization',
-        description: 'JWT access token',
-        required: true
-    })
+    @ApiBearerAuth('access-token')
     async getFilteredTasks(@Request() req, @Body() filterTasksDto: FilterTasksDto) {
         const requestedUserLogin = req.user.username;
         return await this.tasksService.getFilteredTasks(requestedUserLogin, filterTasksDto);
@@ -138,11 +113,7 @@ export class TasksController {
     @Get('/sorted')
     @ApiOperation({'summary': 'Получить задачи в отсортированном виде'})
     @ApiResponse({status: 200, type: TasksListDto})
-    @ApiHeader({
-        name: 'Authorization',
-        description: 'JWT access token',
-        required: true
-    })
+    @ApiBearerAuth('access-token')
     async getSortedTasks(@Request() req, @Body() sortTaskDto: SortTasksDto) {
         const requestedUserLogin = req.user.username;
         return await this.tasksService.getSortedTasks(requestedUserLogin, sortTaskDto);

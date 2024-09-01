@@ -7,14 +7,16 @@ export class CreateTaskDto {
     @IsString()
     @IsNotEmpty()
     @ApiProperty({
-        default: "new task"
+        description: "Descriptive title",
+        default: "Task №..."
     })
     public readonly title: string;
 
     @IsString()
     @IsNotEmpty()
     @ApiProperty({
-        default: "some important task description"
+        description: "Descriptive description",
+        default: "Hmmm..."
     })
     public readonly description: string;
 
@@ -29,7 +31,8 @@ export class CreateTaskDto {
     @IsNumber()
     @IsNotEmpty()
     @ApiProperty({
-        default: "id of user-executor"
+        description: "Id of user-executor",
+        default: 0
     })
     public readonly executorId: number;
 
@@ -37,7 +40,8 @@ export class CreateTaskDto {
     @IsDate()
     @IsNotEmpty()
     @ApiProperty({
-        default: "date of deadline"
+        description: "Date of deadline",
+        default: "01-01-2001"
     })
     public readonly deadline: Date;
 }

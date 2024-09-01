@@ -12,6 +12,13 @@ async function start() {
 
     const config = new DocumentBuilder()
         .setTitle('Task tracker')
+        .addBearerAuth(
+            {
+                type: 'http',
+                scheme: 'bearer',
+            },
+            'access-token',
+        )
         .build();
     const swaggerDocument = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('/api/swagger', app, swaggerDocument);
